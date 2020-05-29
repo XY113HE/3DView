@@ -18,7 +18,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     private GLSurfaceView glSurfaceView;
     private ArrayList<FloatBuffer> mVertices = new ArrayList<FloatBuffer>();
     float baseSize = 2f;
@@ -26,10 +26,6 @@ public class MainActivity extends AppCompatActivity {
     float[] verticesTop = { baseSize, baseSize, baseSize,      baseSize, baseSize, -baseSize,       -baseSize, baseSize, -baseSize,    -baseSize, baseSize, baseSize };
     float[] verticesMiddle = { baseSize, 0f, baseSize,         baseSize, 0f, -baseSize,             -baseSize, 0f, -baseSize,          -baseSize, 0f, baseSize };
     float[] verticesBottom = { baseSize, -baseSize, baseSize,   baseSize, -baseSize, -baseSize,     -baseSize, -baseSize, -baseSize,    -baseSize, -baseSize, baseSize };
-    int pointCount = verticesTop.length/3;
-    private FloatBuffer currentMPointVertices;
-    private FloatBuffer currentTPointVertices;
-    private FloatBuffer currentBPointVertices;
 
     private ArrayList<FloatBuffer> mLineVertices = new ArrayList<FloatBuffer>();
     float[] line1 = {-baseSize, baseSize, baseSize,   -baseSize, -baseSize, baseSize};
@@ -39,6 +35,10 @@ public class MainActivity extends AppCompatActivity {
 
     private float angle = 1f;
 
+    //存储历史运动轨迹
+    private ArrayList<FloatBuffer> mMiddleHistoryVertices = new ArrayList<>();
+    private ArrayList<FloatBuffer> mTopHistoryVertices = new ArrayList<>();
+    private ArrayList<FloatBuffer> mBottomHistoryVertices = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,12 +65,9 @@ public class MainActivity extends AppCompatActivity {
                     if(a == 200){
                         break;
                     }
-                    float[] currentPoint = {0f, 0f, 0.01f*a};
-                    currentMPointVertices = getFloatBuffer(currentPoint);
-                    float[] currentPoint2 = {0f, baseSize, -0.01f*a};
-                    currentTPointVertices = getFloatBuffer(currentPoint2);
-                    float[] currentPoint3 = {0f+0.01f*a, -baseSize, 0f};
-                    currentBPointVertices = getFloatBuffer(currentPoint3);
+                    mMiddleHistoryVertices.add(getFloatBuffer(new float[]{0f, 0f, 0.01f*a}));
+                    mTopHistoryVertices.add(getFloatBuffer(new float[]{0f, baseSize, -0.01f*a}));
+                    mBottomHistoryVertices.add(getFloatBuffer(new float[]{0f+0.01f*a, -baseSize, 0f}));
                     a++;
                     SystemClock.sleep(100);
                 }
@@ -130,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 //绘制线的画笔粗细
                 gl.glLineWidth(2f);
                 //绘制点的画笔粗细
-                gl.glPointSize(10f);
+                //gl.glPointSize(2f);
                 // 设置镜头的方位
                 GLU.gluLookAt(gl, 10.0f, 8.0f, 6.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
                 // 旋转图形
@@ -171,33 +168,51 @@ public class MainActivity extends AppCompatActivity {
 
     private void drawCenterPoint(GL10 gl) {
         if(a == 0)return;
+        gl.glPointSize(2f);
         // 启用顶点开关
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        //左下方向动点
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, currentMPointVertices);
-        gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
-        // 禁用顶点开关
+        for (int i = 0; i < mMiddleHistoryVertices.size(); i++) {
+            //左下方向动点
+            if(i == mMiddleHistoryVertices.size()-1){
+                gl.glPointSize(10f);
+            }
+            gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mMiddleHistoryVertices.get(i));
+            gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
+        }
+            // 禁用顶点开关
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     }
 
     private void drawTopPoint(GL10 gl) {
         if(a == 0)return;
+        gl.glPointSize(2f);
         // 启用顶点开关
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        //左下方向动点
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, currentTPointVertices);
-        gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
+        for (int i = 0; i < mTopHistoryVertices.size(); i++) {
+            if(i == mTopHistoryVertices.size()-1){
+                gl.glPointSize(10f);
+            }
+            //左下方向动点
+            gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mTopHistoryVertices.get(i));
+            gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
+        }
         // 禁用顶点开关
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     }
 
     private void drawBottomPoint(GL10 gl) {
         if(a == 0)return;
+        gl.glPointSize(2f);
         // 启用顶点开关
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        //左下方向动点
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, currentBPointVertices);
-        gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
+        for (int i = 0; i < mBottomHistoryVertices.size(); i++) {
+            if(i == mBottomHistoryVertices.size()-1){
+                gl.glPointSize(10f);
+            }
+            //左下方向动点
+            gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mBottomHistoryVertices.get(i));
+            gl.glDrawArrays(GL10.GL_POINTS, 0, 1);
+        }
         // 禁用顶点开关
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     }
